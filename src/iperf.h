@@ -266,6 +266,7 @@ struct iperf_test
     struct protocol *protocol;
     signed char state;
     char     *server_hostname;                  /* -c option */
+    char     *control_channel;                  /* --control option */
     char     *tmp_template;
     char     *bind_address;                     /* first -B option */
     char     *bind_dev;                         /* bind to network device */
