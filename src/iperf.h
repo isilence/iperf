@@ -88,10 +88,12 @@ struct iperf_interval_results
     int       interval_packet_count;
     int       interval_outoforder_packets;
     int       interval_cnt_error;
+    int       interval_data_error;
     int       packet_count;
     double    jitter;
     int       outoforder_packets;
     int       cnt_error;
+    int       data_error;
 
     int omitted;
 #if (defined(linux) || defined(__FreeBSD__) || defined(__NetBSD__)) && \
@@ -209,6 +211,7 @@ struct iperf_stream
     int       outoforder_packets;
     int       omitted_outoforder_packets;
     int       cnt_error;
+    int       data_error;
     int       omitted_cnt_error;
     uint64_t  target;
 
@@ -312,6 +315,7 @@ struct iperf_test
     int	      json_output;                      /* -J option - JSON output */
     int	      zerocopy;                         /* -Z option - use sendfile */
     int	      zc_api;                           /* --zc_api option - use socket API */
+    int	      data_val;                         /* -x option - data validate */
     int	      disable_cookie_check;             /* --disable_cookie option */
     int       debug;				/* -d option - enable debug */
     int	      get_server_output;		/* --get-server-output */

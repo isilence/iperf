@@ -120,6 +120,7 @@ const char usage_longstr[] = "Usage: iperf3 [-s|-c host] [options]\n"
                            "                            (default %d ms)\n"
                            "  -d, --debug               emit debugging output\n"
                            "  -v, --version             show version information and quit\n"
+                           "  -x  --dataval             enable data validation\n"
                            "  -h, --help                show this message and quit\n"
                            "Server specific:\n"
                            "  -s, --server              run in server mode\n"
@@ -403,6 +404,9 @@ const char report_outoforder[] =
 
 const char report_sum_outoforder[] =
 "[SUM]%s %4.1f-%4.1f sec  %d datagrams received out-of-order\n";
+
+const char report_sum_data_error_packets[] =
+"[SUM] %d datagrams failed data validation\n";
 
 const char report_peer[] =
 "[%3d] local %s port %u connected with %s port %u\n";
