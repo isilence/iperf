@@ -970,6 +970,7 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
         {"flowlabel", required_argument, NULL, 'L'},
 #endif /* HAVE_FLOWLABEL */
         {"zerocopy", no_argument, NULL, 'Z'},
+        {"zc_api", no_argument, NULL, OPT_ZC_SOCK_API },
         {"omit", required_argument, NULL, 'O'},
         {"file", required_argument, NULL, 'F'},
         {"repeating-payload", no_argument, NULL, OPT_REPEATING_PAYLOAD},
@@ -1308,6 +1309,10 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
                 }
                 test->zerocopy = 1;
 		client_flag = 1;
+                break;
+            case OPT_ZC_SOCK_API:
+                test->zc_api = 1;
+                client_flag = 1;
                 break;
             case OPT_REPEATING_PAYLOAD:
                 test->repeating_payload = 1;
@@ -4027,6 +4032,17 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
     memset(sp->result, 0, sizeof(struct iperf_stream_result));
     TAILQ_INIT(&sp->result->interval_results);
     
+    if (test->zc_api) {
+        sp->buffer = (char *) mmap(NULL, test->settings->blksize,
+			           PROT_READ | PROT_WRITE,
+				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,
+			           -1, 0);
+        if (sp->buffer == MAP_FAILED)
+            fprintf(stderr, "Failed to back buffer with huge pages. falling back\n");
+        else
+            goto pending_size;
+    }
+
     /* Create and randomize the buffer */
     sp->buffer_fd = mkstemp(template);
     if (sp->buffer_fd == -1) {
@@ -4054,6 +4070,8 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
         free(sp);
         return NULL;
     }
+
+pending_size:
     sp->pending_size = 0;
 
     /* Set socket */

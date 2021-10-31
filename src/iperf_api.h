@@ -88,6 +88,7 @@ typedef uint64_t iperf_size_t;
 #define OPT_DONT_FRAGMENT 26
 #define OPT_RCV_TIMEOUT 27
 #define OPT_CONTROL_CHANNEL 28
+#define OPT_ZC_SOCK_API 29
 
 /* states */
 #define TEST_START 1

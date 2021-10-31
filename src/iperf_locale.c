@@ -183,7 +183,8 @@ const char usage_longstr[] = "Usage: iperf3 [-s|-c host] [options]\n"
 #if defined(HAVE_FLOWLABEL)
                            "  -L, --flowlabel N         set the IPv6 flow label (only supported on Linux)\n"
 #endif /* HAVE_FLOWLABEL */
-                           "  -Z, --zerocopy            use a 'zero copy' method of sending data\n"
+                           "  -Z, --zerocopy            use a 'zero copy' method of sending data based on sendfile\n"
+                           "  --zc_api                  use a 'zero copy' method of sending data based on Tx ZC socket API\n"
                            "  -O, --omit N              omit the first n seconds\n"
                            "  -T, --title str           prefix every output line with this string\n"
                            "  --extra-data str          data string to include in client and server JSON\n"
