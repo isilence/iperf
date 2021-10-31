@@ -4082,7 +4082,7 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
         if (sp->buffer == MAP_FAILED)
             fprintf(stderr, "Failed to back buffer with huge pages. falling back\n");
         else
-            goto pending_size;
+            goto repeating_pattern;
     }
 
     /* Create and randomize the buffer */
@@ -4113,7 +4113,10 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
         return NULL;
     }
 
-pending_size:
+repeating_pattern:
+    if (test->repeating_payload)
+        fill_with_repeating_pattern(sp->buffer, test->settings->blksize);
+
     sp->pending_size = 0;
 
     /* Set socket */
@@ -4139,9 +4142,7 @@ pending_size:
         sp->diskfile_fd = -1;
 
     /* Initialize stream */
-    if (test->repeating_payload)
-        fill_with_repeating_pattern(sp->buffer, test->settings->blksize);
-    else
+    if (!test->repeating_payload)
         ret = readentropy(sp->buffer, test->settings->blksize);
 
     if ((ret < 0) || (iperf_init_stream(sp, test) < 0)) {

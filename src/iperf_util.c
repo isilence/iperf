@@ -82,20 +82,21 @@ int readentropy(void *out, size_t outsize)
 /*
  * Fills buffer with repeating pattern (similar to pattern that used in iperf2)
  */
-void fill_with_repeating_pattern(void *out, size_t outsize)
+void fill_with_repeating_pattern(char *buf, size_t outsize)
 {
+    char counter = 48;
     size_t i;
-    int counter = 0;
-    char *buf = (char *)out;
 
     if (!outsize) return;
 
     for (i = 0; i < outsize; i++) {
-        buf[i] = (char)('0' + counter);
-        if (counter >= 9)
-            counter = 0;
-        else
-            counter++;
+        buf[i] = counter;
+
+        if (++counter >= 122) {
+            buf[++i] = 0xde;
+            buf[++i] = 0xad;
+            counter = 48;
+	}
     }
 }
 
