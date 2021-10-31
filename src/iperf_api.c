@@ -971,6 +971,7 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
 #endif /* HAVE_FLOWLABEL */
         {"zerocopy", no_argument, NULL, 'Z'},
         {"zc_api", no_argument, NULL, OPT_ZC_SOCK_API },
+        {"rx_drop", no_argument, NULL, OPT_RX_DROP_API },
         {"dataval", no_argument, NULL, 'x'},
         {"disable_cookie", no_argument, NULL, OPT_DISABLE_COOKIE },
         {"omit", required_argument, NULL, 'O'},
@@ -1316,6 +1317,9 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
                 test->zc_api = 1;
                 client_flag = 1;
                 break;
+            case OPT_RX_DROP_API:
+                test->rx_drop = 1;
+                break;
             case OPT_DISABLE_COOKIE:
                 test->disable_cookie_check = 1;
                 break;
@@ -1479,6 +1483,11 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
                 usage_long(stderr);
                 exit(1);
         }
+    }
+
+    if (test->data_val && test->rx_drop) {
+        printf("rx_drop can not be used with data validation\n");
+        test->rx_drop = 0;
     }
 
     /* Check flag / role compatibility. */

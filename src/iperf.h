@@ -315,6 +315,7 @@ struct iperf_test
     int	      json_output;                      /* -J option - JSON output */
     int	      zerocopy;                         /* -Z option - use sendfile */
     int	      zc_api;                           /* --zc_api option - use socket API */
+    int	      rx_drop;                          /* --rx_drop option */
     int	      data_val;                         /* -x option - data validate */
     int	      disable_cookie_check;             /* --disable_cookie option */
     int       debug;				/* -d option - enable debug */

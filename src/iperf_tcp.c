@@ -60,7 +60,10 @@ iperf_tcp_recv(struct iperf_stream *sp)
     int index;
     char dblErr = 0;    
 
-    r = Nread(sp->socket, sp->buffer, sp->settings->blksize, Ptcp);
+    if (sp->test->rx_drop)
+        r = recv(sp->socket, sp->buffer, sp->settings->blksize, MSG_TRUNC);
+    else
+        r = Nread(sp->socket, sp->buffer, sp->settings->blksize, Ptcp);
 
     if (r < 0)
         return r;
