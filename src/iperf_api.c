@@ -4149,6 +4149,14 @@ repeating_pattern:
     } else
         sp->diskfile_fd = -1;
 
+    if (test->io_uring && iperf_io_uring_regbuf(test, sp)) {
+        close(sp->buffer_fd);
+        munmap(sp->buffer, sp->test->settings->blksize);
+        free(sp->result);
+        free(sp);
+        return NULL;
+    }
+
     /* Initialize stream */
     if (!test->repeating_payload)
         ret = readentropy(sp->buffer, test->settings->blksize);

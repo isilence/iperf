@@ -163,6 +163,23 @@ int iperf_io_uring_init(struct iperf_test *test)
 	return 0;
 }
 
+int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp)
+{
+	struct iovec iov = {
+		.iov_base = sp->buffer,
+		.iov_len  = test->settings->blksize,
+	};
+
+	if (io_uring_register_buffers(&test->ring, &iov, 1)) {
+		fprintf(stderr, "io_uring: register_buffers failed\n");
+		return -1;
+	}
+
+	printf("registered buf %p with uring\n", sp->buffer);
+
+	return 0;
+}
+
 int io_uring_send(struct iperf_stream *sp)
 {
 	struct iperf_test *test = sp->test;
@@ -235,11 +252,19 @@ int io_uring_send(struct iperf_stream *sp)
 #else
 static inline int iperf_io_uring_init(struct iperf_test *test)
 {
+	printf("io_uring_init: not enabled\n");
+	return -EOPNOTSUPP;
+}
+
+int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp)
+{
+	printf("io_uring_regbuf: not enabled\n");
 	return -EOPNOTSUPP;
 }
 
 static inline int io_uring_send(struct iperf_stream *sp)
 {
+	printf("io_uring_send: not enabled\n");
 	return -EOPNOTSUPP;
 }
 #endif

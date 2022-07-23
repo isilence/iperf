@@ -59,5 +59,5 @@ int iperf_tcp_listen(struct iperf_test *);
 
 int iperf_tcp_connect(struct iperf_test *);
 
-
+int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp);
 #endif
