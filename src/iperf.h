@@ -337,6 +337,7 @@ struct iperf_test
     fd_set    write_set;                        /* set of write sockets */
 
     int       io_uring;                         /* --io_uring option - use io_uring API */
+    int       io_uring_zc;                      /* use io_uring with ZC API */
 #ifdef HAVE_LIBURING
     struct io_uring ring;
     bool iou_reg_file;

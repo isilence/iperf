@@ -1498,6 +1498,11 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
         test->rx_drop = 0;
     }
 
+    if (test->zerocopy && test->io_uring) {
+	    test->zerocopy = 0;
+	    test->io_uring_zc = 1;
+    }
+
     /* Check flag / role compatibility. */
     if (test->role == 'c' && server_flag) {
         i_errno = IESERVERONLY;

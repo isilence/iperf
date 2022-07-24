@@ -219,7 +219,10 @@ int io_uring_send(struct iperf_stream *sp)
 				printf("cqe res %d submitted size %llu\n",
 				       cqe->res, cqe->user_data);
 
-			if (cqe->res <= 0) {
+			if (cqe->flags & IORING_CQE_F_NOTIF) {
+				if (test->debug)
+					printf("buf notification completion\n");
+			} else if (cqe->res <= 0) {
 				if (cqe->res != -EAGAIN) {
 					fprintf(stderr, "failed cqe: res %d vs send_size %llu\n",
 						cqe->res, cqe->user_data);
@@ -247,8 +250,13 @@ int io_uring_send(struct iperf_stream *sp)
 	if (test->debug)
 		printf("sqe init: buffer %p size %d\n", sp->buffer, sp->pending_size);
 
-	io_uring_prep_send(sqe, sp->socket, sp->buffer, sp->pending_size,
-			   MSG_WAITALL);
+	if (test->io_uring_zc) {
+		io_uring_prep_send_zc(sqe, sp->socket, sp->buffer,
+				     sp->pending_size, MSG_WAITALL, 0);
+	} else {
+		io_uring_prep_send(sqe, sp->socket, sp->buffer, sp->pending_size, MSG_WAITALL);
+	}
+
 	if (test->iou_reg_file) {
 		sqe->fd = 0;
 		sqe->flags |= IOSQE_FIXED_FILE;
