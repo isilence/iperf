@@ -43,6 +43,9 @@
 #include "iperf_tcp.h"
 #include "net.h"
 #include "cjson.h"
+#ifdef HAVE_LIBURING
+#include "liburing.h"
+#endif
 
 #if defined(HAVE_FLOWLABEL)
 #include "flowlabel.h"
@@ -146,6 +149,101 @@ static void iperf_tcp_zc_complete(int sd)
 	}
 }
 
+#ifdef HAVE_LIBURING
+int iperf_io_uring_init(struct iperf_test *test)
+{
+	unsigned nentries = 16;
+
+	if (io_uring_queue_init(nentries, &test->ring, 0)) {
+		fprintf(stderr, "io_uring: queue init failed\n");
+		return -1;
+	}
+
+	printf("with uring; uring_entries %u\n", nentries);
+	return 0;
+}
+
+int io_uring_send(struct iperf_stream *sp)
+{
+	struct iperf_test *test = sp->test;
+	struct io_uring_sqe *sqe;
+
+	sqe = io_uring_get_sqe(&test->ring);
+	if (!sqe) {
+		struct io_uring_cqe *cqe;
+		int rc;
+
+		rc = io_uring_submit(&test->ring);
+		if (rc < 0) {
+			fprintf(stderr, "io_uring_submit failed\n");
+			return -1;
+		}
+
+		while(1) {
+			if (io_uring_wait_cqe(&test->ring, &cqe) < 0) {
+				if (errno == EINTR)
+					continue;
+				fprintf(stderr, "io_uring_wait_cqe failed: %s:%d\n",
+					strerror(errno), errno);
+				return -1;
+			}
+			break;
+		}
+
+		while (cqe) {
+			if (test->debug)
+				printf("cqe res %d submitted size %llu\n",
+				       cqe->res, cqe->user_data);
+
+			if (cqe->res <= 0) {
+				if (cqe->res != -EAGAIN) {
+					fprintf(stderr, "failed cqe: res %d vs send_size %llu\n",
+						cqe->res, cqe->user_data);
+				}
+			} else if (cqe->res != cqe->user_data) {
+				unsigned delta = cqe->user_data - cqe->res;
+
+				sp->result->bytes_sent -=  delta;
+				// this one seems wrong
+				sp->result->bytes_sent_this_interval -= delta;
+
+				fprintf(stderr, "failed cqe: res %d vs send_size %llu\n",
+					cqe->res, cqe->user_data);
+			}
+
+			if (io_uring_peek_cqe(&test->ring, &cqe) < 0)
+				break;
+			io_uring_cqe_seen(&test->ring, cqe);
+		}
+
+		sqe = io_uring_get_sqe(&test->ring);
+		if (!sqe)
+			return 0;
+	}
+
+	if (test->debug)
+		printf("sqe init: buffer %p size %d\n", sp->buffer, sp->pending_size);
+
+	io_uring_prep_send(sqe, sp->socket, sp->buffer, sp->pending_size,
+			   MSG_WAITALL);
+
+	// TO-DO: user_data can be a pointer to a struct - e.g., tracks
+	//        which buffer is submitted, byes in bufefer, etc
+	sqe->user_data = sp->pending_size;
+
+	return sp->pending_size;
+}
+#else
+static inline int iperf_io_uring_init(struct iperf_test *test)
+{
+	return -EOPNOTSUPP;
+}
+
+static inline int io_uring_send(struct iperf_stream *sp)
+{
+	return -EOPNOTSUPP;
+}
+#endif
 
 /* iperf_tcp_send 
  *
@@ -174,6 +272,8 @@ iperf_tcp_send(struct iperf_stream *sp)
 	r = send(sp->socket, sp->buffer, sp->pending_size, MSG_ZEROCOPY);
     } else if (sp->test->zerocopy) {
 	r = Nsendfile(sp->buffer_fd, sp->socket, sp->buffer, sp->pending_size);
+    } else if (sp->test->io_uring) {
+	r = io_uring_send(sp);
     } else {
 	r = Nwrite(sp->socket, sp->buffer, sp->pending_size, Ptcp);
     }
@@ -474,6 +574,11 @@ iperf_tcp_connect(struct iperf_test *test)
     socklen_t optlen;
     int saved_errno;
     int rcvbuf_actual, sndbuf_actual;
+
+    if (test->io_uring && iperf_io_uring_init(test) < 0) {
+        i_errno = IEINITTEST;
+        return -1;
+    }
 
     s = create_socket(test->settings->domain, SOCK_STREAM, test->bind_address,
                       test->bind_dev, test->bind_port, test->server_hostname,

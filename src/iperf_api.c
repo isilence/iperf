@@ -972,6 +972,9 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
         {"zerocopy", no_argument, NULL, 'Z'},
         {"zc_api", no_argument, NULL, OPT_ZC_SOCK_API },
         {"rx_drop", no_argument, NULL, OPT_RX_DROP_API },
+#ifdef HAVE_LIBURING
+	{"io_uring", no_argument, NULL, OPT_IO_URING_API },
+#endif
         {"dataval", no_argument, NULL, 'x'},
         {"disable_cookie", no_argument, NULL, OPT_DISABLE_COOKIE },
         {"omit", required_argument, NULL, 'O'},
@@ -1320,6 +1323,11 @@ iperf_parse_arguments(struct iperf_test *test, int argc, char **argv)
             case OPT_RX_DROP_API:
                 test->rx_drop = 1;
                 break;
+#ifdef HAVE_LIBURING
+            case OPT_IO_URING_API:
+                test->io_uring = 1;
+                break;
+#endif
             case OPT_DISABLE_COOKIE:
                 test->disable_cookie_check = 1;
                 break;
@@ -4074,7 +4082,7 @@ iperf_new_stream(struct iperf_test *test, int s, int sender)
     memset(sp->result, 0, sizeof(struct iperf_stream_result));
     TAILQ_INIT(&sp->result->interval_results);
     
-    if (test->zc_api) {
+    if (test->zc_api || test->io_uring) {
         sp->buffer = (char *) mmap(NULL, test->settings->blksize,
 			           PROT_READ | PROT_WRITE,
 				   MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB,

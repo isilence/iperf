@@ -187,6 +187,9 @@ const char usage_longstr[] = "Usage: iperf3 [-s|-c host] [options]\n"
                            "  -Z, --zerocopy            use a 'zero copy' method of sending data based on sendfile\n"
                            "  --zc_api                  use a 'zero copy' method of sending data based on Tx ZC socket API\n"
                            "  --rx_drop                 Use MSG_TRUNC on recv to avoid memcpy to userspace\n"
+#ifdef HAVE_LIBURING
+                           "  --io_uring                Use io_uring for Tx\n"
+#endif
                            "  -O, --omit N              omit the first n seconds\n"
                            "  -T, --title str           prefix every output line with this string\n"
                            "  --extra-data str          data string to include in client and server JSON\n"

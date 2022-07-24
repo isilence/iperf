@@ -67,6 +67,9 @@
 #include "queue.h"
 #include "cjson.h"
 #include "iperf_time.h"
+#ifdef HAVE_LIBURING
+#include "liburing.h"
+#endif
 
 #if defined(HAVE_SSL)
 #include <openssl/bio.h>
@@ -332,6 +335,11 @@ struct iperf_test
     int       max_fd;
     fd_set    read_set;                         /* set of read sockets */
     fd_set    write_set;                        /* set of write sockets */
+
+    int       io_uring;                         /* --io_uring option - use io_uring API */
+#ifdef HAVE_LIBURING
+    struct io_uring ring;
+#endif
 
     /* Interval related members */ 
     int       omitting;

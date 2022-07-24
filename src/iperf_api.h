@@ -91,6 +91,7 @@ typedef uint64_t iperf_size_t;
 #define OPT_ZC_SOCK_API 29
 #define OPT_DISABLE_COOKIE 30
 #define OPT_RX_DROP_API 31
+#define OPT_IO_URING_API 32
 
 /* states */
 #define TEST_START 1
