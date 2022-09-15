@@ -4149,7 +4149,7 @@ repeating_pattern:
     } else
         sp->diskfile_fd = -1;
 
-    if (test->io_uring && iperf_io_uring_regbuf(test, sp)) {
+    if (test->io_uring && iperf_io_uring_register(test, sp)) {
         close(sp->buffer_fd);
         munmap(sp->buffer, sp->test->settings->blksize);
         free(sp->result);

@@ -163,7 +163,7 @@ int iperf_io_uring_init(struct iperf_test *test)
 	return 0;
 }
 
-int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp)
+int iperf_io_uring_register(struct iperf_test *test, struct iperf_stream *sp)
 {
 	struct iovec iov = {
 		.iov_base = sp->buffer,
@@ -174,9 +174,15 @@ int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp)
 		fprintf(stderr, "io_uring: register_buffers failed\n");
 		return -1;
 	}
-
 	printf("registered buf %p with uring\n", sp->buffer);
 
+	if (test->iou_reg_file) {
+		if (io_uring_register_files(&test->ring, &sp->socket, 1)) {
+			fprintf(stderr, "io_uring: register_files failed\n");
+			return -1;
+		}
+		printf("registered file %i with uring\n", sp->socket);
+	}
 	return 0;
 }
 
@@ -242,6 +248,10 @@ int io_uring_send(struct iperf_stream *sp)
 
 	io_uring_prep_send(sqe, sp->socket, sp->buffer, sp->pending_size,
 			   MSG_WAITALL);
+	if (test->iou_reg_file) {
+		sqe->fd = 0;
+		sqe->flags |= IOSQE_FIXED_FILE;
+	}
 
 	// TO-DO: user_data can be a pointer to a struct - e.g., tracks
 	//        which buffer is submitted, byes in bufefer, etc
@@ -256,7 +266,7 @@ static inline int iperf_io_uring_init(struct iperf_test *test)
 	return -EOPNOTSUPP;
 }
 
-int iperf_io_uring_regbuf(struct iperf_test *test, struct iperf_stream *sp)
+int iperf_io_uring_register(struct iperf_test *test, struct iperf_stream *sp)
 {
 	printf("io_uring_regbuf: not enabled\n");
 	return -EOPNOTSUPP;

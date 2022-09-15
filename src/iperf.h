@@ -339,6 +339,7 @@ struct iperf_test
     int       io_uring;                         /* --io_uring option - use io_uring API */
 #ifdef HAVE_LIBURING
     struct io_uring ring;
+    bool iou_reg_file;
 #endif
 
     /* Interval related members */ 
