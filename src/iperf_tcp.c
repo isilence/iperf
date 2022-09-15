@@ -210,10 +210,9 @@ int io_uring_send(struct iperf_stream *sp)
 				fprintf(stderr, "failed cqe: res %d vs send_size %llu\n",
 					cqe->res, cqe->user_data);
 			}
-
+			io_uring_cqe_seen(&test->ring, cqe);
 			if (io_uring_peek_cqe(&test->ring, &cqe) < 0)
 				break;
-			io_uring_cqe_seen(&test->ring, cqe);
 		}
 
 		sqe = io_uring_get_sqe(&test->ring);
