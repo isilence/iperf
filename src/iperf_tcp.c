@@ -183,6 +183,7 @@ int iperf_io_uring_register(struct iperf_test *test, struct iperf_stream *sp)
 		}
 		printf("registered file %i with uring\n", sp->socket);
 	}
+	io_uring_register_ring_fd(&test->ring);
 	return 0;
 }
 
