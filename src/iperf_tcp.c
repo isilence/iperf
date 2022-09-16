@@ -251,8 +251,12 @@ int io_uring_send(struct iperf_stream *sp)
 		printf("sqe init: buffer %p size %d\n", sp->buffer, sp->pending_size);
 
 	if (test->io_uring_zc) {
+		const unsigned buf_index = 0; /* we registered only one buffer */
+
 		io_uring_prep_send_zc(sqe, sp->socket, sp->buffer,
 				     sp->pending_size, MSG_WAITALL, 0);
+		sqe->ioprio |= IORING_RECVSEND_FIXED_BUF;
+		sqe->buf_index = buf_index;
 	} else {
 		io_uring_prep_send(sqe, sp->socket, sp->buffer, sp->pending_size, MSG_WAITALL);
 	}
